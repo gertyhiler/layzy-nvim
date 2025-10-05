@@ -1,4 +1,6 @@
-if true return {}
+if true then
+  return {}
+end
 
 return {
   "yetone/avante.nvim",
@@ -57,25 +59,25 @@ return {
   opts = {
     -- Основные настройки
     provider = "anthropic",
-    
+
     -- Настройки интерфейса
     ui = {
       border = "rounded",
       width = 0.8,
       height = 0.8,
     },
-    
+
     -- Настройки селектора файлов
     selector = {
       exclude_auto_select = { "NvimTree", "TelescopePrompt", "TelescopeResults" },
     },
-    
+
     -- Настройки правил
     rules = {
       project_dir = ".avante/rules",
       global_dir = "~/.config/avante/rules",
     },
-    
+
     -- Настройки переопределения промптов
     override_prompt_dir = vim.fn.expand("~/.config/nvim/avante_prompts"),
   },
@@ -88,4 +90,4 @@ return {
     -- Инициализация дополнительной конфигурации
     require("config.avante").setup()
   end,
-} 
+}

@@ -1,5 +1,7 @@
 -- Дополнительная конфигурация для avante.nvim
-if true return {}
+if true then
+  return {}
+end
 
 local M = {}
 
@@ -17,4 +19,4 @@ function M.setup()
   setup_custom_prompts()
 end
 
-return M 
+return M
