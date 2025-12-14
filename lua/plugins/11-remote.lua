@@ -1,6 +1,6 @@
-if true then
-  return {}
-end
+-- if true then
+--  return {}
+-- end
 
 return {
   "amitds1997/remote-nvim.nvim",
@@ -33,12 +33,13 @@ return {
 
     -- ВАЖНО: используем конфиг удалённой машины и ничего не копируем сверху
     remote = {
-      app_name = "nvim", -- использовать стандартный конфиг удалённого Neovim
+      app_name = "remote-nvim", -- использовать стандартный конфиг удалённого Neovim
       copy_dirs = {
+        -- Копируем весь локальный конфиг на удалённый хост
         config = {
           base = vim.fn.stdpath("config"),
-          dirs = {}, -- отключаем копирование локальной конфигурации
-          compression = { enabled = false, additional_opts = {} },
+          dirs = "*", -- копировать всё содержимое конфига
+          compression = { enabled = true, additional_opts = {} }, -- tar вместо scp для надёжности
         },
         data = { base = vim.fn.stdpath("data"), dirs = {}, compression = { enabled = true } },
         cache = { base = vim.fn.stdpath("cache"), dirs = {}, compression = { enabled = true } },

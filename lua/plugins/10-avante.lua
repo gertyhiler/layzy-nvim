@@ -1,6 +1,7 @@
--- if true then
---  return {}
--- end
+-- Временно отключен в пользу cursor-agent.nvim
+if true then
+  return {}
+end
 
 return {
   "yetone/avante.nvim",

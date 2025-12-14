@@ -15,6 +15,10 @@ return {
         lua = { "stylua" },
         fish = { "fish_indent" },
         sh = { "shfmt" },
+        -- Go форматирование
+        go = { "goimports", "gofumpt" },
+        gomod = { "gofumpt" },
+        gowork = { "gofumpt" },
       },
       formatters = {
         prettier = {
