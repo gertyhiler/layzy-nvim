@@ -7,6 +7,36 @@ M.defaults = {
   active = "codex",
   --- tmux pane title, который считаем agent-панелью.
   agent_pane_title = "agent",
+  --- Режим маршрутизации фронтендов:
+  ---   hybrid = ask/edit через frontends.* (по умолчанию avante),
+  ---   legacy = возврат к старому поведению (ask->tmux, edit->oneshot).
+  frontend_mode = "hybrid",
+  --- Явная маршрутизация по типу взаимодействия.
+  frontends = {
+    ask = "avante",
+    edit = "avante",
+    pane = "tmux",
+    oneshot = "cli",
+  },
+  --- Avante как опциональный фронтенд над тем же contract (AGENTS.md).
+  avante = {
+    enabled = true,
+    provider = "codex",
+    instructions_file = "AGENTS.md",
+    acp = {
+      command = "npx",
+      args = { "-y", "-g", "@zed-industries/codex-acp" },
+      env = {
+        NODE_NO_WARNINGS = "1",
+        OPENAI_API_KEY = "OPENAI_API_KEY",
+      },
+    },
+    system_prompt_override = table.concat({
+      "AGENTS.md is authoritative for this workspace.",
+      "If AGENTS.md references .agents/skills, follow those references.",
+      "Do not assume Avante-specific instruction files exist.",
+    }, "\n"),
+  },
   --- Провайдеры (позволяем переопределять поля извне).
   providers = {
     codex = {},
@@ -32,6 +62,23 @@ function M.set_active(name)
   end
   M.state.active = name
   vim.notify("AI provider → " .. name, vim.log.levels.INFO, { title = "AI" })
+end
+
+function M.set_frontend_mode(mode)
+  if mode ~= "hybrid" and mode ~= "legacy" then
+    vim.notify("AI: unknown frontend mode: " .. tostring(mode), vim.log.levels.ERROR, { title = "AI" })
+    return
+  end
+  M.state.frontend_mode = mode
+  vim.notify("AI frontend mode → " .. mode, vim.log.levels.INFO, { title = "AI" })
+end
+
+function M.toggle_frontend_mode()
+  if M.state.frontend_mode == "hybrid" then
+    M.set_frontend_mode("legacy")
+  else
+    M.set_frontend_mode("hybrid")
+  end
 end
 
 function M.provider(name)

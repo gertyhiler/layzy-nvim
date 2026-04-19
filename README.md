@@ -30,13 +30,14 @@ adev -a cursor-agent
 
 | Keys                  | Режим | Что делает                                                     |
 | --------------------- | ----- | -------------------------------------------------------------- |
-| `<leader>ae`          | v     | **one-shot edit** — быстрая правка выделения через stdin       |
+| `<leader>ae`          | v     | **edit** — routed frontend (по умолчанию Avante, fallback one-shot) |
 | `<leader>ar`          | v     | **one-shot read** — анализ выделения (профиль read, если задан) |
-| `<leader>aa`          | n/v   | **ask** — prompt + выделение → pane агента → сабмит            |
-| `<leader>as`          | v     | **send selection** — только вставить в pane (без Enter)        |
-| `<leader>af`          | n     | **attach file** — кинуть `@relpath` в pane (без Enter)         |
-| `<leader>ap`          | n     | **focus** — переключиться в pane агента                        |
-| `<leader>aA`          | n     | **choose** — выбрать активного провайдера                      |
+| `<leader>aa`          | n/v   | **ask** — routed frontend (по умолчанию Avante, fallback tmux pane) |
+| `<leader>as`          | v     | **send selection** — только вставить в pane (без Enter)            |
+| `<leader>af`          | n     | **attach file** — кинуть `@relpath` в pane (без Enter)             |
+| `<leader>ap`          | n     | **focus** — переключиться в pane агента                            |
+| `<leader>aA`          | n     | **choose provider** — выбрать активного провайдера                 |
+| `<leader>aM`          | n     | **choose mode** — frontend mode (`hybrid` / `legacy`)              |
 
 Команды:
 
@@ -45,13 +46,16 @@ adev -a cursor-agent
 :AiProvider claude       " переключить
 :AiExec                  " one-shot exec на текущем range (как <leader>ae)
 :AiExecRead              " то же с read-профилем
+:AiFrontend              " показать/переключить frontend mode
+:AiFrontendToggle        " быстрый toggle hybrid <-> legacy
 ```
 
 ### Ключевая идея
 
-- **Короткие правки** (`<leader>ae/ar`) — блокирующий `vim.system` → stdin провайдера.
-  Результат открывается в временном split-буфере (или notify для коротких ответов).
-- **Длинные/параллельные задачи** (`<leader>aa/as/af/ap`) — уходят в interactive
+- **Hybrid routing**: `ask/edit` идут через настроенный frontend (по умолчанию Avante для `codex`),
+  а при проблемах ACP/Avante автоматически откатываются на текущий tmux/one-shot путь.
+- **Legacy mode** (`:AiFrontend legacy`) возвращает старое поведение: `ask -> tmux`, `edit -> one-shot`.
+- **Длинные/параллельные задачи** (`<leader>as/af/ap`) всегда остаются в interactive
   TUI агента в соседнем tmux-pane. Можно `:qa!` nvim — агент продолжает работать.
   При возврате в nvim изменения подтягиваются: включён `autoread`, на
   `FocusGained/BufEnter/CursorHold` вызывается `:checktime` (`lua/config/ai/autoreload.lua`).
@@ -91,12 +95,14 @@ lua/
 ├── config/
 │   ├── ai/
 │   │   ├── init.lua          — setup(): autoreload + config + keymaps
-│   │   ├── config.lua        — defaults + runtime state (active provider)
+│   │   ├── config.lua        — defaults + runtime state (provider + frontend mode)
 │   │   ├── buffer.lua        — range/selection/workspace_root/output
 │   │   ├── tmux.lua          — find pane by title, paste, focus
 │   │   ├── oneshot.lua       — short edits via vim.system (blocking)
 │   │   ├── pane.lua          — long tasks → tmux agent pane
-│   │   ├── keymaps.lua       — <leader>a… карта + :AiProvider
+│   │   ├── avante.lua        — Avante adapter + availability checks
+│   │   ├── router.lua        — frontend routing + fallback
+│   │   ├── keymaps.lua       — <leader>a… карта + :AiProvider/:AiFrontend
 │   │   ├── autoreload.lua    — :checktime on focus/enter
 │   │   └── providers/
 │   │       ├── codex.lua
@@ -109,5 +115,6 @@ lua/
 │   ├── options.lua
 │   └── lazy.lua
 └── plugins/
-    └── 06-colors.lua         — carbonfox + overrides
+    ├── 06-colors.lua         — carbonfox + overrides
+    └── 10-ai.lua             — avante.nvim (ACP codex) + AI frontend integration
 ```

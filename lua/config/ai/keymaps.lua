@@ -1,6 +1,6 @@
 local buf = require("config.ai.buffer")
 local oneshot = require("config.ai.oneshot")
-local pane = require("config.ai.pane")
+local router = require("config.ai.router")
 local cfg = require("config.ai.config")
 
 local M = {}
@@ -32,28 +32,28 @@ function M.setup()
 
   map("v", "<leader>ae", function()
     local a, b = buf.visual_range()
-    oneshot.run(a, b, { profile = (cfg.get().providers[cfg.get().active] or {}).profile_edit })
-  end, "AI: one-shot edit (selection)")
+    router.edit(a, b)
+  end, "AI: edit selection (routed frontend)")
 
   map("v", "<leader>ar", function()
     local a, b = buf.visual_range()
-    oneshot.run(a, b, { profile = (cfg.get().providers[cfg.get().active] or {}).profile_read })
+    router.read(a, b)
   end, "AI: one-shot read (selection)")
 
   --- ── Tmux pane: длинные/параллельные задачи ─────────────────────────────
-  map("n", "<leader>ap", pane.focus, "AI: focus agent pane")
+  map("n", "<leader>ap", router.focus_pane, "AI: focus agent pane")
 
-  map("n", "<leader>af", pane.attach_file, "AI: attach current file to agent pane")
+  map("n", "<leader>af", router.attach_file, "AI: attach current file to agent pane")
 
   map("v", "<leader>as", function()
     local a, b = buf.visual_range()
-    pane.attach_selection(a, b)
+    router.attach_selection(a, b)
   end, "AI: send selection to agent pane")
 
   map({ "n", "v" }, "<leader>aa", function()
     local a, b = get_range()
-    pane.ask(a, b)
-  end, "AI: ask agent (prompt + selection)")
+    router.ask(a, b)
+  end, "AI: ask agent (routed frontend)")
 
   --- ── Переключение провайдера ────────────────────────────────────────────
   vim.api.nvim_create_user_command("AiProvider", function(o)
@@ -70,6 +70,27 @@ function M.setup()
     desc = "Показать/переключить активный AI-провайдер",
   })
 
+  --- ── Режим фронтендов (hybrid/legacy) ────────────────────────────────────
+  vim.api.nvim_create_user_command("AiFrontend", function(o)
+    if o.args == "" then
+      vim.notify("AI frontend mode = " .. (cfg.get().frontend_mode or "hybrid"), vim.log.levels.INFO, { title = "AI" })
+      return
+    end
+    cfg.set_frontend_mode(o.args)
+  end, {
+    nargs = "?",
+    complete = function()
+      return { "hybrid", "legacy" }
+    end,
+    desc = "Показать/переключить режим AI-фронтенда",
+  })
+
+  vim.api.nvim_create_user_command("AiFrontendToggle", function()
+    cfg.toggle_frontend_mode()
+  end, {
+    desc = "Переключить режим AI-фронтенда (hybrid <-> legacy)",
+  })
+
   map("n", "<leader>aA", function()
     vim.ui.select(vim.tbl_keys(cfg.get().providers), { prompt = "AI provider:" }, function(choice)
       if choice then
@@ -77,6 +98,14 @@ function M.setup()
       end
     end)
   end, "AI: choose provider")
+
+  map("n", "<leader>aM", function()
+    vim.ui.select({ "hybrid", "legacy" }, { prompt = "AI frontend mode:" }, function(choice)
+      if choice then
+        cfg.set_frontend_mode(choice)
+      end
+    end)
+  end, "AI: choose frontend mode")
 end
 
 return M
