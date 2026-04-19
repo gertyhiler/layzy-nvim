@@ -1,7 +1,4 @@
--- local semantic = require("config.semantic-tokens")
-local sc = require("config.palette")
-
---- Иконки git в Snacks explorer / pickers (буквы). Тот же объект и в opts, и в доп. merge в config.
+-- Snacks explorer/picker: буквенные иконки git-статусов.
 local snacks_picker_git_icons = {
   enabled = true,
   staged = "S",
@@ -15,7 +12,8 @@ local snacks_picker_git_icons = {
   unmerged = "!",
 }
 
---- Snacks не красит basename по диагностике; подмена только для ERROR (см. highlights SnacksExplorerFileDiagnosticError).
+--- Snacks сам не красит basename по диагностике; подменяем formatter и красим
+--- только когда severity == ERROR (см. highlights SnacksExplorerFileDiagnosticError).
 local function patch_snacks_explorer_diag_filename()
   local ok, fmt = pcall(require, "snacks.picker.format")
   if not ok or fmt.__diag_filename_patched then
@@ -35,46 +33,21 @@ local function patch_snacks_explorer_diag_filename()
   end
 end
 
+--- Оверрайды из `config/highlights` после смены ColorScheme.
+local function apply_overrides()
+  require("config.highlights").apply()
+end
+
 return {
   {
-    "EdenEast/nightfox.nvim",
-    lazy = false,
-    priority = 1000,
-    config = function()
-      require("nightfox").setup({
-        options = {
-          transparent = false,
-          styles = {
-            comments = "italic",
-          },
-        },
-        groups = {
-          all = {
-            ["@comment"] = { fg = sc.comment, style = "italic" },
-          },
-        },
-      })
-      vim.cmd.colorscheme("nightfox")
-
-      local hl = require("config.highlights")
-      hl.apply()
-
+    "folke/lazy.nvim",
+    init = function()
       vim.api.nvim_create_autocmd("ColorScheme", {
-        pattern = "nightfox*",
-        callback = function()
-          -- semantic.apply_plugin_highlights()
-          hl.apply()
-        end,
+        group = vim.api.nvim_create_augroup("config_highlights_overrides", { clear = true }),
+        callback = apply_overrides,
       })
-      -- semantic.apply_plugin_highlights()
+      vim.schedule(apply_overrides)
     end,
-  },
-
-  {
-    "LazyVim/LazyVim",
-    opts = {
-      colorscheme = "nightfox",
-    },
   },
 
   {
@@ -86,7 +59,6 @@ return {
     },
   },
 
-  -- Имя как у LazyVim (`snacks.nvim`), иначе lazy может не смержить opts в тот же плагин, что вызывает setup().
   {
     "snacks.nvim",
     opts = {

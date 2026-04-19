@@ -1,26 +1,17 @@
 local M = {}
 
-M.bg = "#0f1419"
-M.bg_alt = "#131a22"
-M.bg_float = "#161d26"
-M.border = "#253140"
+--- Поверх текущей темы (LazyVim по умолчанию — Tokyonight): «nord»-маркеры (строки / комментарии / дерево).
+--- Числа и прочий синтаксис остаются на стороне темы.
 
-M.fg = "#d7dee7"
-M.fg_muted = "#8b97a3"
+-- Синтаксис (Nord-подобные оттенки)
+M.string = "#A3BE8C" -- Nord14: мятно-зелёные строки
+M.comment = "#6E7F78" -- тусклый зелёно-серый, отличимый от строк
+M.folder = "#81A1C1" -- Nord9: ледяной синий для папок в дереве
 
-M.comment = "#90B27A"
-M.func = "#7BC6D3"
-M.keyword = "#7AA2F7"
-M.type = "#8CD7B3"
-M.string = "#A3BE8C"
-M.number = "#C792EA"
-
-M.git_add = "#7FBF7A"
-M.git_change = "#D4A853"
-M.git_delete = "#E06C75"
-
-M.diff_add_bg = "#183a2d"
-M.diff_change_bg = "#1d2d3d"
-M.diff_delete_bg = "#4a2328"
+-- Git / Snacks (согласовано с тёмным UI, читаемо рядом с нашими зелёными)
+M.git_add = "#A3BE8C"
+M.git_change = "#EBCB8B" -- Nord13
+M.git_delete = "#BF616A" -- Nord11
+M.git_ignored = "#4C566A" -- Nord3
 
 return M
