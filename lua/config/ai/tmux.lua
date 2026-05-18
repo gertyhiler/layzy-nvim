@@ -13,21 +13,30 @@ local function tmux(args, opts)
   return res
 end
 
---- Ищем pane по title во ВСЕХ окнах текущей сессии (а если вне tmux — пытаемся через -a).
+--- Ищем pane по title во ВСЕХ окнах текущей сессии (`list-panes -s`).
+--- Совпадение: #{pane_title} == title ИЛИ #{window_name} == title (окна adev: vim / agent / shell).
+--- Второе нужно, когда TUI агента перезаписывает pane_title.
 --- Возвращает pane_id ("%NN") или nil.
 function M.find_pane_by_title(title)
   if not in_tmux() then
     return nil
   end
-  local args = { "list-panes", "-s", "-F", "#{pane_id} #{pane_title}" }
+  local args = {
+    "list-panes",
+    "-s",
+    "-F",
+    "#{pane_id}\t#{pane_title}\t#{window_name}",
+  }
   local res = tmux(args)
   if res.code ~= 0 or not res.stdout then
     return nil
   end
   for line in res.stdout:gmatch("[^\r\n]+") do
-    local id, ttl = line:match("^(%S+)%s+(.+)$")
-    if id and ttl == title then
-      return id
+    local id, pane_title, window_name = line:match("^([^\t]+)\t([^\t]*)\t([^\t]*)$")
+    if id then
+      if pane_title == title or window_name == title then
+        return id
+      end
     end
   end
   return nil

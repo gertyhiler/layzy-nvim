@@ -39,6 +39,33 @@ local function apply_overrides()
 end
 
 return {
+  -- Переопределяем встроенный LazyVim colorscheme на Nord
+  { "LazyVim/LazyVim", opts = { colorscheme = "tokyonight-moon" } },
+
+  -- Настоящий Nord (не carbonfox + overrides)
+  -- {
+  --   "gbprod/nord.nvim",
+  --   lazy = false,
+  --   priority = 1000,
+  --   opts = {
+  --     -- Ошибки как fg-цвет (чище на тёмном фоне)
+  --     errors = { mode = "fg" },
+  --     search = { theme = "vim" },
+  --     styles = {
+  --       comments = { italic = true },
+  --       -- Для bufferline-интеграции (23-bufferline.lua использует nord.plugins.bufferline)
+  --       bufferline = {
+  --         current = {},
+  --         modified = { italic = true },
+  --       },
+  --     },
+  --   },
+  --   config = function(_, opts)
+  --     require("nord").setup(opts)
+  --   end,
+  -- },
+
+  -- Регистрируем ColorScheme autocmd максимально рано
   {
     "folke/lazy.nvim",
     init = function()
@@ -68,11 +95,13 @@ return {
         },
       },
     },
-    config = function()
-      patch_snacks_explorer_diag_filename()
-      local P = Snacks.config.picker
-      P.icons = P.icons or {}
-      P.icons.git = vim.tbl_deep_extend("force", P.icons.git or {}, snacks_picker_git_icons)
+    -- init (не config) — не перебиваем LazyVim config, который вызывает setup()
+    init = function()
+      vim.api.nvim_create_autocmd("User", {
+        pattern = "VeryLazy",
+        once = true,
+        callback = patch_snacks_explorer_diag_filename,
+      })
     end,
   },
 }

@@ -65,13 +65,53 @@ adev -a cursor-agent
 
 ## Тема
 
-- Core: `carbonfox` из `EdenEast/nightfox.nvim` (OLED-ориентированный стиль той же семьи).
-- Палитра: `lua/config/palette.lua` — `bg = #000000`, с минимальным подъёмом
-  `bg_alt = #0a0a0c` / `bg_float = #101014` для иерархии поверхностей.
-- Семантика (Function/Keyword/Type/String/Number/GitSigns/Diff) — в `lua/config/highlights.lua`;
-  пересаживается автоматически на `ColorScheme`, так что смена темы её не ломает.
-- Tmux (`~/.config/tmux/tmux.conf`) использует ту же палитру — pane-border,
-  status bar, window-current — синхронно с nvim.
+- Core: `gbprod/nord.nvim` — официальный Nord, максимально близкий к VS Code и vim-nord.
+- Palette (`lua/config/palette.lua`) — только UI-токены: git-цвета и diagnostic overrides.
+  Синтаксис (строки, ключевые слова, типы, функции) — полностью на стороне темы.
+- UI overrides (`lua/config/highlights.lua`) — Snacks git-статусы, `SnacksExplorerFileDiagnosticError`,
+  усиленные `DiagnosticError` (bold) / `DiagnosticWarn`; пересаживаются на `ColorScheme`.
+- Bufferline: Nord-интеграция через `nord.plugins.bufferline.akinsho()` + git-суффикс `~`
+  когда файл имеет незакоммиченные изменения (gitsigns).
+
+## Повседневные мелочи (discoverability)
+
+### Навигация по коду
+
+| Key | Что делает |
+| --- | ---------- |
+| `gd` | **Smart goto**: refs → picker если есть, иначе definition |
+| `gr` | References (явно) |
+| `<leader>cD` | Definition (прямой прыжок, без smart-логики) |
+| `<leader>cc` | Run codelens (gopls: generate, test, gc_details…) |
+| `<leader>cC` | Refresh codelens |
+
+### Диагностика
+
+| Key | Что делает |
+| --- | ---------- |
+| `<leader>xx` | Trouble: все диагностики проекта |
+| `<leader>xX` | Trouble: диагностики текущего буфера |
+| `<leader>xL` | Location list |
+| `<leader>xQ` | Quickfix |
+
+### Snacks explorer и picker
+
+| Key | Что делает |
+| --- | ---------- |
+| `y` (в explorer) | Yank абсолютного пути к файлу |
+| `Y` (в explorer) | Yank относительного пути |
+| `<C-t>` (в explorer) | Открыть terminal в cwd узла |
+| `H` | Toggle hidden files (opt-out; по умолчанию видны) |
+| `I` | Toggle ignored files (opt-out; по умолчанию видны) |
+
+Hidden и ignored файлы (`.env`, dotfiles, gitignored) видны по умолчанию везде:
+в `Find Files`, `Grep`, и explorer — без нажатия `H` или `I`.
+
+### Spell
+
+- Prose spell (`markdown`, `gitcommit`, `text`) — включается автоматически (`en,ru`).
+- CSpell (код) — включается когда в репо есть `cspell.json` / `cspell.config.*`.
+  `cspell` устанавливается через Mason; диагностики — via nvim-lint как `vim.diagnostic.INFO`.
 
 ## tmux шпаргалка
 
@@ -108,13 +148,18 @@ lua/
 │   │       ├── codex.lua
 │   │       ├── claude.lua
 │   │       └── cursor_agent.lua
-│   ├── palette.lua           — OLED палитра
-│   ├── highlights.lua        — семантика поверх темы
+│   ├── palette.lua           — UI-only токены (git, diag)
+│   ├── highlights.lua        — UI overrides поверх темы
 │   ├── autocmds.lua          — грузит config.ai.setup()
 │   ├── keymaps.lua
 │   ├── options.lua
 │   └── lazy.lua
 └── plugins/
-    ├── 06-colors.lua         — carbonfox + overrides
-    └── 10-ai.lua             — avante.nvim (ACP codex) + AI frontend integration
+    ├── 06-colors.lua         — gbprod/nord.nvim + snacks git-patch
+    ├── 10-ai.lua             — avante.nvim (ACP codex) + AI frontend integration
+    ├── 20-snacks-ux.lua      — hidden/ignored по дефолту
+    ├── 21-lsp-keymaps.lua    — smart gd, <leader>cD, codelens
+    ├── 22-spell.lua          — vim spell (prose) + cspell via nvim-lint
+    ├── 23-bufferline.lua     — Nord bufferline + git ~ суффикс
+    └── 24-blink-tailwind.lua — blink.cmp polish (no auto docs/ghost text)
 ```

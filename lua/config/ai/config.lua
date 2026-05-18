@@ -5,7 +5,7 @@ local M = {}
 M.defaults = {
   --- Активный провайдер по имени ключа в providers/.
   active = "codex",
-  --- tmux pane title, который считаем agent-панелью.
+  --- tmux: agent-панель. Совпадение по pane title или по имени окна (`adev` задаёт окно `agent`).
   agent_pane_title = "agent",
   --- Режим маршрутизации фронтендов:
   ---   hybrid = ask/edit через frontends.* (по умолчанию avante),

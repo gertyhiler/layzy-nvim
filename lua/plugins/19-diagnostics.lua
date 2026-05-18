@@ -4,42 +4,34 @@ return {
     "rachartier/tiny-inline-diagnostic.nvim",
     event = "LspAttach",
     priority = 1000,
-    config = function()
-      -- Отключаем стандартный virtual_text
+    init = function()
       vim.diagnostic.config({ virtual_text = false })
+    end,
+    config = function()
+      -- Берём bg из активной темы; при LspAttach colorscheme уже установлена
+      local normal_bg = (function()
+        local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = "Normal" })
+        if ok and hl and hl.bg then
+          return string.format("#%06x", hl.bg)
+        end
+        return "#2E3440" -- Nord Polar Night 0 fallback
+      end)()
 
       require("tiny-inline-diagnostic").setup({
-        -- Стиль отображения
-        preset = "modern", -- "modern", "classic", "minimal", "ghost", "simple", "nonerdfont"
+        preset = "modern",
 
-        -- Настройки
         options = {
-          -- Показывать источник диагностики (eslint, typescript и т.д.)
           show_source = false,
-
-          -- Throttle обновлений (ms)
           throttle = 20,
-
-          -- Мульти-линейные сообщения
           multilines = true,
-
-          -- Показывать все диагностики на строке
           show_all_diags_on_cursorline = false,
-
-          -- Padding и стиль
           softwrap = 30,
-
-          -- Overflow handling
           overflow = {
-            mode = "wrap", -- "wrap", "none", "oneline"
+            mode = "wrap",
           },
-
-          -- Отступ от текста
           virt_texts = {
             priority = 2048,
           },
-
-          -- Включить для всех severity
           severity = {
             vim.diagnostic.severity.ERROR,
             vim.diagnostic.severity.WARN,
@@ -48,7 +40,6 @@ return {
           },
         },
 
-        -- Кастомные цвета (Nord theme)
         blend = {
           factor = 0.22,
         },
@@ -60,10 +51,9 @@ return {
           hint = "DiagnosticHint",
           arrow = "NonText",
           background = "CursorLine",
-          mixing_color = "#2E3440",
+          mixing_color = normal_bg,
         },
       })
     end,
   },
 }
-
