@@ -68,7 +68,7 @@ return {
     end,
   },
 
-  -- cspell CLI через Mason (Node >= 18 у тебя уже есть из avante/codex)
+  -- cspell CLI через Mason
   {
     "mason-org/mason.nvim",
     opts = function(_, opts)

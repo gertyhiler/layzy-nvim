@@ -23,7 +23,10 @@ return {
       formatters = {
         prettier = {
           condition = function(self, ctx)
-            return vim.fs.find({ "prettier.config.cjs", ".prettierrc", ".prettierrc.json" }, { path = ctx.filename, upward = true })[1]
+            return vim.fs.find(
+              { "prettier.config.cjs", ".prettierrc", ".prettierrc.json" },
+              { path = ctx.filename, upward = true }
+            )[1]
           end,
         },
       },

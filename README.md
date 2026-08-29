@@ -1,165 +1,87 @@
-# Neovim + Agentic workflow
+# Neovim review workspace
 
-LazyVim на базе [LazyVim](https://github.com/LazyVim/LazyVim), заточенный под
-agent-agnostic разработку: nvim + свободный tty + CLI-агент живут рядом в tmux,
-длинные/параллельные задачи идут вне nvim и переживают его рестарт.
+LazyVim configuration for reading code and reviewing changes next to external
+tools in Herdr. Neovim does not start or control an agent: Codex edits the
+working tree, Hunk presents the diff, and Neovim provides project structure,
+LSP navigation, diagnostics, TODOs and clipboard-ready context.
 
-## Запуск сессии
+## Workflow
 
-```sh
-adev                # сессия = basename($PWD), 3 панели в текущей директории
-adev -s myproj      # явное имя сессии
-adev -a claude      # другой агент (или переменная AGENT_CMD)
-adev -a cursor-agent
+```text
+Codex ──writes──> working tree <──reads── Neovim
+                         │
+                         └────────reads── Hunk
+
+Neovim ──OSC 52──> clipboard of the local Herdr client ──paste──> Codex
 ```
 
-Макет (по умолчанию):
+Files changed outside Neovim are reloaded on focus and buffer events. Project
+commands such as `setup`, `check`, `format`, `test`, `dev` and `build` belong in
+each project's Makefile rather than in editor-specific mappings.
 
-```
-┌──────────────────┬────────────┐
-│                  │   agent    │  pane title: "agent"
-│      nvim        ├────────────┤
-│  (pane "nvim")   │   shell    │  pane title: "shell"
-└──────────────────┴────────────┘
-```
+## Core actions
 
-Агентом по умолчанию считается `codex`. Переопределяется через `$AGENT_CMD`
-или флаг `-a`. Если агента нет в PATH, pane останется свободным shell-ом.
+Leader is `<space>`.
 
-## AI keymaps (leader = `<space>`)
+### Agent context
 
-| Keys                  | Режим | Что делает                                                     |
-| --------------------- | ----- | -------------------------------------------------------------- |
-| `<leader>ae`          | v     | **edit** — routed frontend (по умолчанию Avante, fallback one-shot) |
-| `<leader>ar`          | v     | **one-shot read** — анализ выделения (профиль read, если задан) |
-| `<leader>aa`          | n/v   | **ask** — routed frontend (по умолчанию Avante, fallback tmux pane) |
-| `<leader>as`          | v     | **send selection** — только вставить в pane (без Enter)            |
-| `<leader>af`          | n     | **attach file** — кинуть `@relpath` в pane (без Enter)             |
-| `<leader>ap`          | n     | **focus** — переключиться в pane агента                            |
-| `<leader>aA`          | n     | **choose provider** — выбрать активного провайдера                 |
-| `<leader>aM`          | n     | **choose mode** — frontend mode (`hybrid` / `legacy`)              |
+| Keys | Mode | Action |
+| --- | --- | --- |
+| `<leader>y` | visual | Copy selected code to the local clipboard |
+| `<leader>yf` | normal | Copy the current path relative to the Git root |
+| `<leader>yr` | normal/visual | Copy `path:line` or `path:first-last` |
+| `<leader>yc` | normal/visual | Copy a file reference and fenced code block |
 
-Команды:
+The unnamed Vim register remains local. Explicit context yanks use OSC 52, so
+they work through `herdr --remote` without NeoClip, tmux or a remote clipboard
+program. Paste into the remote session with the Herdr/client paste action.
 
-```vim
-:AiProvider              " показать активный провайдер
-:AiProvider claude       " переключить
-:AiExec                  " one-shot exec на текущем range (как <leader>ae)
-:AiExecRead              " то же с read-профилем
-:AiFrontend              " показать/переключить frontend mode
-:AiFrontendToggle        " быстрый toggle hybrid <-> legacy
-```
+### Review and navigation
 
-### Ключевая идея
+| Keys | Action |
+| --- | --- |
+| `]h` / `[h` | Next / previous Git hunk |
+| `<leader>ghp` | Preview current hunk inline |
+| `<leader>ghd` | Diff current file |
+| `gd` | References when present, otherwise definition |
+| `gr` | References |
+| `gI` | Implementation |
+| `gy` | Type definition |
+| `K` | Hover, including type information |
+| `<leader>xx` | Project diagnostics |
+| `<leader>xX` | Current-buffer diagnostics |
 
-- **Hybrid routing**: `ask/edit` идут через настроенный frontend (по умолчанию Avante для `codex`),
-  а при проблемах ACP/Avante автоматически откатываются на текущий tmux/one-shot путь.
-- **Legacy mode** (`:AiFrontend legacy`) возвращает старое поведение: `ask -> tmux`, `edit -> one-shot`.
-- **Длинные/параллельные задачи** (`<leader>as/af/ap`) всегда остаются в interactive
-  TUI агента в соседнем tmux-pane. Можно `:qa!` nvim — агент продолжает работать.
-  При возврате в nvim изменения подтягиваются: включён `autoread`, на
-  `FocusGained/BufEnter/CursorHold` вызывается `:checktime` (`lua/config/ai/autoreload.lua`).
-- **Агностика** — провайдер выбирается в `lua/config/ai/config.lua` или налету
-  через `:AiProvider`. Добавить нового — файл в `lua/config/ai/providers/` с полями
-  `name`, `cmd`, `oneshot_argv(cwd, opts)`, `file_reference(relpath)`.
+LSP inlay hints and code lenses are disabled. TypeScript and Go language
+support remain enabled; Python can be added as another LazyVim language extra
+when needed.
 
-## Тема
+### TODO and formatting
 
-- Core: `gbprod/nord.nvim` — официальный Nord, максимально близкий к VS Code и vim-nord.
-- Palette (`lua/config/palette.lua`) — только UI-токены: git-цвета и diagnostic overrides.
-  Синтаксис (строки, ключевые слова, типы, функции) — полностью на стороне темы.
-- UI overrides (`lua/config/highlights.lua`) — Snacks git-статусы, `SnacksExplorerFileDiagnosticError`,
-  усиленные `DiagnosticError` (bold) / `DiagnosticWarn`; пересаживаются на `ColorScheme`.
-- Bufferline: Nord-интеграция через `nord.plugins.bufferline.akinsho()` + git-суффикс `~`
-  когда файл имеет незакоммиченные изменения (gitsigns).
+| Keys | Action |
+| --- | --- |
+| `<leader>td` | Insert an indented `TODO:` comment below and start typing |
+| `]t` / `[t` | Next / previous TODO comment |
+| `<leader>st` | Search project TODO comments |
+| `<leader>cf` | Format the buffer or visual selection explicitly |
 
-## Повседневные мелочи (discoverability)
+Formatting on save is disabled globally.
 
-### Навигация по коду
+## Clipboard model
 
-| Key | Что делает |
-| --- | ---------- |
-| `gd` | **Smart goto**: refs → picker если есть, иначе definition |
-| `gr` | References (явно) |
-| `<leader>cD` | Definition (прямой прыжок, без smart-логики) |
-| `<leader>cc` | Run codelens (gopls: generate, test, gc_details…) |
-| `<leader>cC` | Refresh codelens |
+- `y`, `p` and the unnamed register stay inside Neovim.
+- `<leader>y...` writes to the host clipboard through OSC 52.
+- Clipboard history is intentionally not persisted.
+- Reading the host clipboard through OSC 52 is not required; use the normal
+  Herdr/client paste action instead.
 
-### Диагностика
+## Language and review tooling
 
-| Key | Что делает |
-| --- | ---------- |
-| `<leader>xx` | Trouble: все диагностики проекта |
-| `<leader>xX` | Trouble: диагностики текущего буфера |
-| `<leader>xL` | Location list |
-| `<leader>xQ` | Quickfix |
+- LazyVim, Snacks picker/explorer and Treesitter
+- TypeScript/JavaScript and Go LSP support
+- Gitsigns and Trouble
+- Todo Comments
+- Conform, invoked manually with `<leader>cf`
+- prose spellcheck and project-scoped CSpell
 
-### Snacks explorer и picker
-
-| Key | Что делает |
-| --- | ---------- |
-| `y` (в explorer) | Yank абсолютного пути к файлу |
-| `Y` (в explorer) | Yank относительного пути |
-| `<C-t>` (в explorer) | Открыть terminal в cwd узла |
-| `H` | Toggle hidden files (opt-out; по умолчанию видны) |
-| `I` | Toggle ignored files (opt-out; по умолчанию видны) |
-
-Hidden и ignored файлы (`.env`, dotfiles, gitignored) видны по умолчанию везде:
-в `Find Files`, `Grep`, и explorer — без нажатия `H` или `I`.
-
-### Spell
-
-- Prose spell (`markdown`, `gitcommit`, `text`) — включается автоматически (`en,ru`).
-- CSpell (код) — включается когда в репо есть `cspell.json` / `cspell.config.*`.
-  `cspell` устанавливается через Mason; диагностики — via nvim-lint как `vim.diagnostic.INFO`.
-
-## tmux шпаргалка
-
-Prefix по умолчанию `C-b`. Биндинги сверху дефолта:
-
-| Key         | Действие                                   |
-| ----------- | ------------------------------------------ |
-| `prefix \|` | split-h (в CWD текущей pane)               |
-| `prefix -`  | split-v (в CWD текущей pane)               |
-| `prefix c`  | new-window в CWD                           |
-| `prefix R`  | reload `~/.config/tmux/tmux.conf`          |
-| `prefix h/j/k/l` | переключение между панелями (vim-like)|
-| `prefix H/J/K/L` | resize (повторяемый)                  |
-| `prefix A`  | задать title текущей pane                  |
-| `v / y` в copy-mode | vi-селект + копия в macOS clipboard |
-
-## Структура
-
-```
-lua/
-├── config/
-│   ├── ai/
-│   │   ├── init.lua          — setup(): autoreload + config + keymaps
-│   │   ├── config.lua        — defaults + runtime state (provider + frontend mode)
-│   │   ├── buffer.lua        — range/selection/workspace_root/output
-│   │   ├── tmux.lua          — find pane by title, paste, focus
-│   │   ├── oneshot.lua       — short edits via vim.system (blocking)
-│   │   ├── pane.lua          — long tasks → tmux agent pane
-│   │   ├── avante.lua        — Avante adapter + availability checks
-│   │   ├── router.lua        — frontend routing + fallback
-│   │   ├── keymaps.lua       — <leader>a… карта + :AiProvider/:AiFrontend
-│   │   ├── autoreload.lua    — :checktime on focus/enter
-│   │   └── providers/
-│   │       ├── codex.lua
-│   │       ├── claude.lua
-│   │       └── cursor_agent.lua
-│   ├── palette.lua           — UI-only токены (git, diag)
-│   ├── highlights.lua        — UI overrides поверх темы
-│   ├── autocmds.lua          — грузит config.ai.setup()
-│   ├── keymaps.lua
-│   ├── options.lua
-│   └── lazy.lua
-└── plugins/
-    ├── 06-colors.lua         — gbprod/nord.nvim + snacks git-patch
-    ├── 10-ai.lua             — avante.nvim (ACP codex) + AI frontend integration
-    ├── 20-snacks-ux.lua      — hidden/ignored по дефолту
-    ├── 21-lsp-keymaps.lua    — smart gd, <leader>cD, codelens
-    ├── 22-spell.lua          — vim spell (prose) + cspell via nvim-lint
-    ├── 23-bufferline.lua     — Nord bufferline + git ~ суффикс
-    └── 24-blink-tailwind.lua — blink.cmp polish (no auto docs/ghost text)
-```
+There is intentionally no embedded AI frontend, agent provider/router, DAP,
+remote-nvim, NeoClip or Go command suite in this configuration.

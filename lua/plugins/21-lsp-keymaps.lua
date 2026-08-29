@@ -21,9 +21,6 @@ return {
   {
     "neovim/nvim-lspconfig",
     opts = function(_, opts)
-      -- Включаем авто-обновление code lenses (gopls: gc_details, generate, тесты, vuln)
-      opts.codelens = vim.tbl_extend("force", opts.codelens or {}, { enabled = true })
-
       -- Добавляем в конец ключей — Keys.resolve() берёт последнее определение для lhs,
       -- поэтому наш gd перебивает LazyVim-дефолт.
       opts.keys = opts.keys or {}
