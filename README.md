@@ -27,14 +27,16 @@ Leader is `<space>`.
 
 | Keys | Mode | Action |
 | --- | --- | --- |
+| `y` | visual | Yank selected code to the local clipboard |
 | `<leader>y` | visual | Copy selected code to the local clipboard |
 | `<leader>yf` | normal | Copy the current path relative to the Git root |
 | `<leader>yr` | normal/visual | Copy `path:line` or `path:first-last` |
 | `<leader>yc` | normal/visual | Copy a file reference and fenced code block |
 
-The unnamed Vim register remains local. Explicit context yanks use OSC 52, so
-they work through `herdr --remote` without NeoClip, tmux or a remote clipboard
-program. Paste into the remote session with the Herdr/client paste action.
+Normal-mode yanks remain local. Visual `y` and explicit context yanks use OSC
+52, so they work through `herdr --remote` without NeoClip, tmux or a remote
+clipboard program. Paste into the remote session with the Herdr/client paste
+action.
 
 ### Review and navigation
 
@@ -69,8 +71,8 @@ Formatting on save is disabled globally.
 
 ## Clipboard model
 
-- `y`, `p` and the unnamed register stay inside Neovim.
-- `<leader>y...` writes to the host clipboard through OSC 52.
+- Normal-mode `y` and `p` stay inside Neovim.
+- Visual `y` and `<leader>y...` write to the host clipboard through OSC 52.
 - Clipboard history is intentionally not persisted.
 - Reading the host clipboard through OSC 52 is not required; use the normal
   Herdr/client paste action instead.

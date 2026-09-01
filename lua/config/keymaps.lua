@@ -4,6 +4,7 @@
 
 local context = require("config.context")
 
+vim.keymap.set("x", "y", '"+y', { desc = "Yank Selection to Host Clipboard" })
 vim.keymap.set("x", "<leader>y", context.copy_selection, { desc = "Yank Selection to Host Clipboard" })
 vim.keymap.set("n", "<leader>yf", context.copy_file, { desc = "Yank File Path to Host Clipboard" })
 vim.keymap.set({ "n", "x" }, "<leader>yr", context.copy_reference, { desc = "Yank File Reference" })
