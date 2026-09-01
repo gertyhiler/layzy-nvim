@@ -51,9 +51,10 @@ program. Paste into the remote session with the Herdr/client paste action.
 | `<leader>xx` | Project diagnostics |
 | `<leader>xX` | Current-buffer diagnostics |
 
-LSP inlay hints and code lenses are disabled. TypeScript and Go language
-support remain enabled; Python can be added as another LazyVim language extra
-when needed.
+LSP inlay hints and code lenses are disabled. TypeScript, Go and Python
+language support are enabled. Python uses Pyright for navigation and type
+information, Ruff for diagnostics and explicit formatting, and supports
+project virtual-environment selection with `<leader>cv`.
 
 ### TODO and formatting
 
@@ -77,7 +78,7 @@ Formatting on save is disabled globally.
 ## Language and review tooling
 
 - LazyVim, Snacks picker/explorer and Treesitter
-- TypeScript/JavaScript and Go LSP support
+- TypeScript/JavaScript, Go and Python LSP support
 - Gitsigns and Trouble
 - Todo Comments
 - Conform, invoked manually with `<leader>cf`
