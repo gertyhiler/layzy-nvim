@@ -14,7 +14,7 @@ return {
         if ok and hl and hl.bg then
           return string.format("#%06x", hl.bg)
         end
-        return "#2E3440" -- Nord Polar Night 0 fallback
+        return "none" -- No fixed fallback palette.
       end)()
 
       require("tiny-inline-diagnostic").setup({

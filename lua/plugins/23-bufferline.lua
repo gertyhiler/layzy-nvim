@@ -2,10 +2,11 @@ return {
   {
     "akinsho/bufferline.nvim",
     opts = function(_, opts)
-      -- Nord native bufferline highlights (must call после того, как nord.nvim загружен)
-      local ok, nb = pcall(require, "nord.plugins.bufferline")
-      if ok then
-        opts.highlights = nb.akinsho()
+      opts.highlights = opts.highlights or {}
+      for _, name in ipairs({ "background", "buffer", "buffer_visible", "tab" }) do
+        opts.highlights[name] = vim.tbl_extend("force", opts.highlights[name] or {}, {
+          fg = require("config.palette").ui_muted,
+        })
       end
 
       opts.options = opts.options or {}
@@ -24,8 +25,7 @@ return {
         end
       end
 
-      -- Более заметный diagnostic indicator: крест для error, треугольник для warn + счётчик.
-      -- DiagnosticError {bold=true} из highlights.lua делает hl группу контрастнее.
+      -- Счётчики ошибок и предупреждений во вкладках.
       opts.options.diagnostics_indicator = function(count, level, diag, _ctx)
         local s = ""
         if diag.error and diag.error > 0 then

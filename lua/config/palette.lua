@@ -1,15 +1,12 @@
 local M = {}
 
--- UI-only токены — строки/комментарии/синтаксис на стороне gbprod/nord.nvim.
+-- Retained Git status colors.
+M.git_add = "#A3BE8C"
+M.git_change = "#EBCB8B"
+M.git_delete = "#BF616A"
+M.git_ignored = "#4C566A"
 
--- Git / Snacks (Nord Aurora palette)
-M.git_add    = "#A3BE8C" -- Nord14
-M.git_change = "#EBCB8B" -- Nord13
-M.git_delete = "#BF616A" -- Nord11
-M.git_ignored = "#4C566A" -- Nord3
-
--- Diagnostic overrides (повышенный контраст для bufferline и tree)
-M.diag_error = "#BF616A" -- Nord11
-M.diag_warn  = "#EBCB8B" -- Nord13
+-- Slightly muted white for secondary navigation text.
+M.ui_muted = "#b4bdd6"
 
 return M
