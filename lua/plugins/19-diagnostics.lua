@@ -1,12 +1,19 @@
 return {
+  {
+    "neovim/nvim-lspconfig",
+    opts = {
+      diagnostics = {
+        -- tiny-inline-diagnostic is the sole inline message renderer.
+        virtual_text = false,
+        virtual_lines = false,
+      },
+    },
+  },
   -- Красивые inline диагностики с padding и скруглениями
   {
     "rachartier/tiny-inline-diagnostic.nvim",
     event = "LspAttach",
     priority = 1000,
-    init = function()
-      vim.diagnostic.config({ virtual_text = false })
-    end,
     config = function()
       -- Берём bg из активной темы; при LspAttach colorscheme уже установлена
       local normal_bg = (function()

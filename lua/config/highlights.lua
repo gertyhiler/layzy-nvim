@@ -2,7 +2,7 @@ local p = require("config.palette")
 
 local M = {}
 
--- UI overrides only; syntax and diagnostics belong to Tokyo Night Moon.
+-- Navigation and unnecessary-code contrast; other colors belong to Tokyo Night Moon.
 
 function M.apply()
   local set = vim.api.nvim_set_hl
@@ -26,6 +26,9 @@ function M.apply()
   -- Keep hidden and ignored names readable without changing NonText globally.
   set(0, "SnacksPickerPathHidden", { fg = p.ui_muted })
   set(0, "SnacksPickerPathIgnored", { fg = p.ui_muted })
+
+  -- Unused/unreachable code must remain readable.
+  set(0, "DiagnosticUnnecessary", { fg = "#696e8c" })
 end
 
 return M
